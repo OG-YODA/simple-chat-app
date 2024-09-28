@@ -1,0 +1,16 @@
+/* Индивидуальные стили для страницы FAQ */
+.FAQ ul {
+    padding: 0;
+  }
+  
+  .FAQ li {
+    margin-bottom: 10px;
+  }
+
+  .faq_block{
+    margin-bottom: 5%;
+  }
+
+  .faq_block ul li a{
+    text-decoration: none;
+  }

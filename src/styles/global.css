@@ -1,0 +1,131 @@
+/* Сброс стилей для унификации отображения в разных браузерах */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* Устанавливаем высоту страницы на 100% */
+html, body {
+  height: 100%;
+  font-family: Arial, sans-serif;
+  line-height: 1.6;
+  background-color: #f4f4f4;
+  color: #333;
+}
+
+/* Основной контейнер приложения должен занимать всю высоту */
+.App {
+  min-height: 100vh; /* Минимальная высота 100% от высоты окна */
+  display: flex;
+  flex-direction: column; /* Flexbox с вертикальным направлением */
+}
+
+/* Контент заполняет всё доступное пространство */
+.content {
+  flex: 1; /* Контент растягивается, занимая доступное пространство */
+  margin-left: 5%;
+  margin-right: 5%;
+}
+
+header {
+  border-bottom: #c2c2c2 1px solid;
+  padding: 1%;
+  text-align: center;
+}
+
+header ul li {
+  border-bottom: 2px solid transparent; /* Прозрачная граница */
+  transition: border-bottom 0.3s ease;
+}
+
+header ul li:hover {
+  margin-bottom: 0;
+  border-bottom-color: #000;
+  border-radius: 3%;
+}
+
+footer {
+  border-top: #c2c2c2 1px solid;
+  padding: 1%;
+  text-align: center;
+  margin-top: auto; /* Футер остаётся внизу при минимальном контенте */
+}
+
+nav ul {
+  list-style: none;
+  display: flex;
+  justify-content: center;
+  padding: 0;
+}
+
+nav ul li {
+  margin: 0 15px;
+}
+
+nav ul li a {
+  color: rgb(0, 0, 0);
+  text-decoration: none;
+  font-size: 18px;
+}
+
+/* Общие стили для заголовков */
+h1 {
+  font-size: 2.5rem;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+/* Общие стили для секций */
+section {
+  margin: 20px 0;
+  padding: 20px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+ul {
+  list-style-type: none;
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+  h1 {
+      font-size: 2rem;
+  }
+
+  nav ul li a {
+      font-size: 16px;
+  }
+
+  section {
+      padding: 15px;
+  }
+}
+
+.App.light {
+  background-color: #f4f4f4;
+  color: #333;
+}
+
+.App.dark {
+  background-color: #272727;
+  color: #eee;
+}
+
+.App.dark header {
+  background-color: #444;
+}
+
+.App.dark nav ul li a {
+  color: #ffffff;
+}
+
+.App.dark a {
+  color: #7e9cff;
+}
+
+.App.dark section {
+  background-color: #444;
+}

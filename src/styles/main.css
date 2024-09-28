@@ -1,0 +1,9 @@
+/* Индивидуальные стили для главной страницы */
+.Main ul {
+    list-style: none;
+    padding: 0;
+  }
+  
+  .Main ul li {
+    margin-bottom: 10px;
+  }

@@ -1,0 +1,47 @@
+.notification {
+  position: fixed; /* Фиксированная позиция относительно экрана */
+  bottom: 20px; /* Уведомление будет в левом нижнем углу экрана */
+  left: 20px;
+  width: 350px;
+  padding: 16px;
+  background-color: #333;
+  color: #fff;
+  border-radius: 5px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  opacity: 1; /* Начальная непрозрачность */
+  transition: opacity 3s ease-in-out; /* Медленный переход прозрачности */
+  z-index: 9999; /* Высокий z-index, чтобы уведомление было поверх всех элементов */
+}
+
+.notification.success {
+  background-color: #4caf50;
+}
+
+.notification.error {
+  background-color: #f44336;
+}
+
+.notification p {
+  margin: 0;
+}
+
+.close-btn {
+  position: absolute;
+  max-width: fit-content;
+  max-height: fit-content;
+  top: 8px;
+  right: 8px;
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 2px;
+  cursor: pointer;
+}
+
+.close-btn:hover {
+  color: #ccc;
+}
+
+.notification.fade-out {
+  opacity: 0; /* Уведомление исчезает, когда добавлен этот класс */
+}

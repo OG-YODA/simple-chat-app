@@ -1,19 +1,25 @@
 import React, { useState } from 'react';
 import '../styles/signup.css';
+import { useNavigate } from 'react-router-dom';
+import CustomNotification from '../components/CustomNotification'; // Импортируем уведомлени
 
 function SignUp() {
+
+  const navigate = useNavigate();
+
   // Стейты для хранения значений полей формы
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
     gender: '',
-    nickname: '',
+    username: '',
     email: '',
     password: '',
     confirmPassword: '',
   });
 
   const [errors, setErrors] = useState({});
+  const [notification, setNotification] = useState(null); // Для хранения уведомления
 
   // Функция для обновления значений полей
   const handleChange = (e) => {
@@ -48,14 +54,47 @@ function SignUp() {
   };
 
   // Функция для отправки формы
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const validationErrors = validate();
+    
     if (Object.keys(validationErrors).length === 0) {
-      console.log('Форма отправлена', formData);
+      try {
+        const response = await fetch('http://localhost:8080/users/register', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            firstname: formData.firstName,
+            lastname: formData.lastName,
+            gender: formData.gender,
+            username: formData.username, 
+            email: formData.email,
+            password: formData.password,
+          }),
+        });
+  
+        if (response.ok) {
+          const data = await response.json();
+          setNotification({ message: 'Регистрация успешна!', type: 'success' });
+          setTimeout(() => {
+            navigate('/login');
+          }, 2000); // Через 2 секунды перенаправляем на страницу логина
+        } else {
+          const errorData = await response.json();
+          setNotification({ message: `Ошибка регистрации: ${errorData.message}`, type: 'error' });
+        }
+      } catch (error) {
+        setNotification({ message: 'Ошибка сервера. Попробуйте позже', type: 'error' });
+      }
     } else {
       setErrors(validationErrors);
     }
+  };
+
+  const closeNotification = () => {
+    setNotification(null); // Закрыть уведомление
   };
 
   return (
@@ -98,11 +137,11 @@ function SignUp() {
         </select>
 
         {/* Никнейм */}
-        <label>Nickname:</label>
+        <label>Username:</label>
         <input
           type="text"
-          name="nickname"
-          value={formData.nickname}
+          name="username"
+          value={formData.username}
           onChange={handleChange}
           required
         />
@@ -142,6 +181,15 @@ function SignUp() {
         {/* Кнопка отправки */}
         <button type="submit">Sign me up!</button>
       </form>
+
+      {/* Отображение уведомления */}
+      {notification && (
+        <CustomNotification
+          message={notification.message}
+          type={notification.type}
+          onClose={closeNotification}
+        />
+      )}
     </div>
   );
 }

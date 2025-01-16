@@ -1,11 +1,9 @@
-/* Сброс стилей для унификации отображения в разных браузерах */
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
-/* Устанавливаем высоту страницы на 100% */
 html, body {
   height: 100%;
   font-family: Arial, sans-serif;
@@ -14,28 +12,26 @@ html, body {
   color: #333;
 }
 
-/* Основной контейнер приложения должен занимать всю высоту */
 .App {
-  min-height: 100vh; /* Минимальная высота 100% от высоты окна */
+  min-height: 100vh; 
   display: flex;
-  flex-direction: column; /* Flexbox с вертикальным направлением */
+  flex-direction: column;
 }
 
-/* Контент заполняет всё доступное пространство */
 .content {
-  flex: 1; /* Контент растягивается, занимая доступное пространство */
+  flex: 1;
   margin-left: 5%;
   margin-right: 5%;
 }
 
 header {
   border-bottom: #c2c2c2 1px solid;
-  padding: 1%;
+  padding: 0.5%;
   text-align: center;
 }
 
 header ul li {
-  border-bottom: 2px solid transparent; /* Прозрачная граница */
+  border-bottom: 2px solid transparent; 
   transition: border-bottom 0.3s ease;
 }
 
@@ -49,7 +45,7 @@ footer {
   border-top: #c2c2c2 1px solid;
   padding: 1%;
   text-align: center;
-  margin-top: auto; /* Футер остаётся внизу при минимальном контенте */
+  margin-top: auto; 
 }
 
 nav ul {
@@ -69,14 +65,12 @@ nav ul li a {
   font-size: 18px;
 }
 
-/* Общие стили для заголовков */
 h1 {
   font-size: 2.5rem;
   margin-bottom: 20px;
   text-align: center;
 }
 
-/* Общие стили для секций */
 section {
   margin: 20px 0;
   padding: 20px;
@@ -89,7 +83,7 @@ ul {
   list-style-type: none;
 }
 
-/* Адаптивность */
+/* Адаптивність */
 @media (max-width: 768px) {
   h1 {
       font-size: 2rem;

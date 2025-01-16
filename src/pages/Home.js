@@ -1,33 +1,70 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import FriendIcon from '../components/FriendIcon';
 import ChatWindow from '../components/ChatWindow';
+import { useNavigate } from 'react-router-dom';
+import CustomNotification from '../components/CustomNotification'; 
 import '../styles/home.css';
 
-function Home() {
-  // Временно создаём список друзей, который позже будет заменён данными из базы
-  const [friends, setFriends] = useState([
-    { id: 1, name: 'John Doe', avatar: 'https://via.placeholder.com/50' },
-    { id: 2, name: 'Jane Smith', avatar: 'https://via.placeholder.com/50' },
-    { id: 3, name: 'Alex Green', avatar: 'https://via.placeholder.com/50' },
-  ]);
+import addUserIcon from '../assets/media/pics/user-add.png';
+import userNoProfilePhoto from '../assets/media/pics/user-no-profile-pics.png';
 
-  // Обработка клика по другу для открытия чата
+function Home() {
+  const navigate = useNavigate();
+  const [friends, setFriends] = useState([]);
   const [selectedFriend, setSelectedFriend] = useState(null);
+  const [errors, setErrors] = useState({});
+  const [notification, setNotification] = useState(null); 
+
+  // Функция загрузки друзей с бэкенда
+  useEffect(() => {
+    const fetchFriends = async () => {
+      try {
+        const response = await fetch('/api/friends'); 
+        if (!response.ok) throw new Error('Ошибка загрузки друзей');
+        
+        const data = await response.json();
+        const friendsData = data.map(friend => ({
+          ...friend,
+          avatar: friend.avatar || userNoProfilePhoto
+        }));
+        
+        setFriends(friendsData);
+      } catch (error) {
+        console.error('Ошибка загрузки списка друзей:', error);
+        setNotification({ message: 'Ошибка загрузки списка друзей!', type: 'error' });
+        setFriends([]);
+      }
+    };
+
+    fetchFriends();
+  }, []);
 
   const handleFriendClick = (friend) => {
     setSelectedFriend(friend);
+  };
+
+  const handleAddFriendClick = () => {
+    navigate('/add-contact');
+  };
+
+  const closeNotification = () => {
+    setNotification(null); 
   };
 
   return (
     <div className="home-page">
       {/* Левая панель с аватарами друзей */}
       <div className="friends-column">
-        {friends.map((friend) => (
-          <FriendIcon key={friend.id} friend={friend} onClick={handleFriendClick} />
-        ))}
-        {/* Иконка "добавить друга", которая всегда внизу */}
-        <div className="friend-icon add-friend">
-          <img src="https://via.placeholder.com/50" alt="Добавить друга" />
+        {friends.length > 0 ? (
+          friends.map((friend) => (
+            <FriendIcon key={friend.id} friend={friend} onClick={handleFriendClick} />
+          ))
+        ) : (
+          <p></p>
+        )}
+        {/* Иконка "добавить друга" */}
+        <div className="friend-icon add-friend" onClick={handleAddFriendClick}>
+          <img src={addUserIcon} alt="Добавить друга" width="32" height="32" />
         </div>
       </div>
 
@@ -41,6 +78,15 @@ function Home() {
           </div>
         )}
       </div>
+
+      {/* Отображение уведомления */}
+      {notification && (
+        <CustomNotification
+          message={notification.message}
+          type={notification.type}
+          onClose={closeNotification}
+        />
+      )}
     </div>
   );
 }

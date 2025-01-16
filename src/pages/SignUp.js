@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
 import '../styles/signup.css';
 import { useNavigate } from 'react-router-dom';
-import CustomNotification from '../components/CustomNotification'; // Импортируем уведомлени
+import CustomNotification from '../components/CustomNotification'; 
+import { useTranslation } from '../context/TranslationContext';
 
 function SignUp() {
 
   const navigate = useNavigate();
+  const { translate } = useTranslation();
 
-  // Стейты для хранения значений полей формы
+  // Стейти
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -19,18 +21,16 @@ function SignUp() {
   });
 
   const [errors, setErrors] = useState({});
-  const [notification, setNotification] = useState(null); // Для хранения уведомления
+  const [notification, setNotification] = useState(null);
 
-  // Функция для обновления значений полей
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // Функция для валидации полей
   const validate = () => {
     let errors = {};
 
-    // Валидация имени и фамилии (без цифр и спецсимволов)
+    // Валідація
     const nameRegex = /^[A-Za-zА-Яа-яЁё]+$/;
     if (!nameRegex.test(formData.firstName)) {
       errors.firstName = 'Имя должно содержать только буквы';
@@ -39,13 +39,11 @@ function SignUp() {
       errors.lastName = 'Фамилия должна содержать только буквы';
     }
 
-    // Валидация почты (должна содержать домен)
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(formData.email)) {
       errors.email = 'Некорректный формат электронной почты';
     }
 
-    // Валидация пароля (пароли должны совпадать)
     if (formData.password !== formData.confirmPassword) {
       errors.password = 'Пароли не совпадают';
     }
@@ -53,7 +51,6 @@ function SignUp() {
     return errors;
   };
 
-  // Функция для отправки формы
   const handleSubmit = async (e) => {
     e.preventDefault();
     const validationErrors = validate();
@@ -77,16 +74,16 @@ function SignUp() {
   
         if (response.ok) {
           const data = await response.json();
-          setNotification({ message: 'Регистрация успешна!', type: 'success' });
+          setNotification({ message: translate('reg_notification_success'), type: 'success' });
           setTimeout(() => {
             navigate('/login');
-          }, 2000); // Через 2 секунды перенаправляем на страницу логина
+          }, 2000);
         } else {
           const errorData = await response.json();
           setNotification({ message: `Ошибка регистрации: ${errorData.message}`, type: 'error' });
         }
       } catch (error) {
-        setNotification({ message: 'Ошибка сервера. Попробуйте позже', type: 'error' });
+        setNotification({ message: translate('reg_notification_fail'), type: 'error' });
       }
     } else {
       setErrors(validationErrors);
@@ -94,15 +91,15 @@ function SignUp() {
   };
 
   const closeNotification = () => {
-    setNotification(null); // Закрыть уведомление
+    setNotification(null);
   };
 
   return (
     <div className="signup-form">
-      <h1>Sign Up</h1>
+      <h1>{translate('sign_up')}</h1>
       <form onSubmit={handleSubmit}>
-        {/* Имя */}
-        <label>Name:</label>
+        {/* Ім'я */}
+        <label>{translate('f_name')}</label>
         <input
           type="text"
           name="firstName"
@@ -112,8 +109,8 @@ function SignUp() {
         />
         {errors.firstName && <p className="error">{errors.firstName}</p>}
 
-        {/* Фамилия */}
-        <label>Surname:</label>
+        {/* Прізвище */}
+        <label>{translate('l_name')}</label>
         <input
           type="text"
           name="lastName"
@@ -123,21 +120,21 @@ function SignUp() {
         />
         {errors.lastName && <p className="error">{errors.lastName}</p>}
 
-        {/* Пол */}
-        <label>Gender:</label>
+        {/* Стать */}
+        <label>{translate('gender')}</label>
         <select
           name="gender"
           value={formData.gender}
           onChange={handleChange}
           required
         >
-          <option value="">Choose</option>
-          <option value="male">Male</option>
-          <option value="female">Female</option>
+          <option value="">-</option>
+          <option value="male">{translate('male')}</option>
+          <option value="female">{translate('female')}</option>
         </select>
 
-        {/* Никнейм */}
-        <label>Username:</label>
+        {/* Нікнейм */}
+        <label>{translate('username')}</label>
         <input
           type="text"
           name="username"
@@ -146,8 +143,8 @@ function SignUp() {
           required
         />
 
-        {/* Электронная почта */}
-        <label>E-Mail:</label>
+        {/* Пошта */}
+        <label>{translate('e_mail')}</label>
         <input
           type="email"
           name="email"
@@ -158,7 +155,7 @@ function SignUp() {
         {errors.email && <p className="error">{errors.email}</p>}
 
         {/* Пароль */}
-        <label>Password:</label>
+        <label>{translate('password')}</label>
         <input
           type="password"
           name="password"
@@ -167,8 +164,8 @@ function SignUp() {
           required
         />
 
-        {/* Подтверждение пароля */}
-        <label>Repeat password:</label>
+        {/* Підтвердження пароля */}
+        <label>{translate('repeat_pass')}</label>
         <input
           type="password"
           name="confirmPassword"
@@ -178,11 +175,11 @@ function SignUp() {
         />
         {errors.password && <p className="error">{errors.password}</p>}
 
-        {/* Кнопка отправки */}
-        <button type="submit">Sign me up!</button>
+        {/* Кнопка відправки */}
+        <button type="submit">{translate('sign_me_in_button')}</button>
       </form>
 
-      {/* Отображение уведомления */}
+      {/* Сповіщення */}
       {notification && (
         <CustomNotification
           message={notification.message}

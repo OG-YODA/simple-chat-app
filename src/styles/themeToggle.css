@@ -3,12 +3,12 @@
     height: 25px;
     border-radius: 15px;
     background-color: #ccc;
-    display: flex;
+    display: inline-block;
     align-items: center;
     padding: 3px;
     cursor: pointer;
     position: absolute;
-    top: 20px;
+    top: 1.25%;
     right: 20px;
     transition: background-color 0.3s ease;
   }

@@ -1,0 +1,40 @@
+.language-dropdown {
+    position: absolute;
+    display: inline-block;
+    left: 20px;
+  }
+  
+  .translation-icon {
+    width: 32px;
+    height: 32px;
+    cursor: pointer;
+  }
+  
+  .language-options {
+    position: absolute;
+    top: 40px; /* Отступ от иконки */
+    left: 0;
+    background-color: white;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    border-radius: 4px;
+    overflow: hidden;
+    z-index: 10;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: none; /* Скрываем список по умолчанию */
+  }
+  
+  .language-dropdown:hover .language-options {
+    display: block; /* Показываем список при наведении */
+  }
+  
+  .language-options li {
+    padding: 10px 20px;
+    cursor: pointer;
+    white-space: nowrap; /* Запрет переноса текста */
+  }
+  
+  .language-options li:hover {
+    background-color: #f0f0f0;
+  }

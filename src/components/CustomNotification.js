@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import '../styles/notification.css';
 
+import closeIcon from '../assets/media/pics/close.png';
+
 const CustomNotification = ({ message, type, onClose }) => {
   const [fade, setFade] = useState(false); // Управляем классом для исчезновения
 
@@ -21,7 +23,7 @@ const CustomNotification = ({ message, type, onClose }) => {
     <div className={`notification ${type} ${fade ? 'fade-out' : ''}`}>
       <p>{message}</p>
       <button className="close-btn" onClick={onClose}>
-        &times;
+        <img src={closeIcon} alt="X" width="32" height="32"/>
       </button>
     </div>
   );

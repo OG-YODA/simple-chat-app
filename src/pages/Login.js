@@ -1,7 +1,7 @@
 import React, { useState, useContext } from 'react'; 
 import '../styles/login.css';
 import { useNavigate } from 'react-router-dom'; 
-import CustomNotification from '../components/CustomNotification'; 
+import { useNotification } from '../components/NotificationProvider';
 import AuthContext from '../context/AuthContext'; 
 import { useTranslation } from '../context/TranslationContext';
 
@@ -13,7 +13,7 @@ function Login() {
     password: '',
   });
   const [errors, setErrors] = useState({});
-  const [notification, setNotification] = useState(null); 
+  const { addNotification } = useNotification();
   const { translate } = useTranslation();
 
   const handleChange = (e) => {
@@ -51,7 +51,7 @@ function Login() {
                 const userId = data.userId; 
                 const authToken = "someAuthToken"; 
 
-                setNotification({ message: translate('login_notification_success'), type: 'success' });
+                addNotification(translate('login_notification_success').message, 'success');
 
                 // Передайте оба значения в `login`
                 login(authToken, userId);
@@ -61,10 +61,10 @@ function Login() {
                 }, 1000);
             } else {
                 const errorData = await response.json();
-                setNotification({ message: `Error: ${errorData.message}`, type: 'error' });
+                addNotification({ message: `Error: ${errorData.message}`, type: 'error' });
             }
         } catch (error) {
-            setNotification({ message: translate('login_notification_fail'), type: 'error' });
+            addNotification(translate('login_notification_fail'), 'error' );
         }
     } else {
         setErrors(validationErrors);
@@ -72,7 +72,7 @@ function Login() {
 };
 
   const closeNotification = () => {
-    setNotification(null); 
+    addNotification(null); 
   };
 
   return (
@@ -100,14 +100,6 @@ function Login() {
 
         <button type="submit">{translate('log_me_in_button')}</button>
       </form>
-
-      {notification && (
-        <CustomNotification
-          message={notification.message}
-          type={notification.type}
-          onClose={closeNotification}
-        />
-      )}
     </div>
   );
 }

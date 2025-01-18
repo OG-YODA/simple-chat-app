@@ -1,20 +1,27 @@
-.notification {
-  position: fixed; 
-  bottom: 20px; 
+.notification-container {
+  position: fixed;
+  bottom: 20px;
   left: 20px;
+  display: flex;
+  flex-direction: column; /* Убираем column-reverse */
+  gap: 10px;
+  z-index: 1000;
+}
+
+.notification {
+  position: absolute;
   width: 350px;
   padding: 16px;
   background-color: #333;
-  color: #fff;
   border-radius: 5px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-  opacity: 1; 
-  transition: opacity 3s ease-in-out; 
-  z-index: 9999; 
+  opacity: 1;
+  transition: transform 0.5s ease-out; /* Плавное движение */
 }
 
 .notification.success {
   background-color: #4caf50;
+  color: #fff;
 }
 
 .notification.error {
@@ -35,22 +42,50 @@
   transform: translateY(-50%);
   background: none;
   border: none;
+  border-radius: 3px;
   cursor: pointer;
-  max-width: 32px; /* Фиксированная ширина кнопки */
-  max-height: 32px; /* Фиксированная высота кнопки */
-  display: flex; /* Flexbox для центрирования содержимого */
-  justify-content: center; /* Центрирование по горизонтали */
-  align-items: center; /* Центрирование по вертикали */
+  max-width: 32px;
+  max-height: 32px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .close-btn img {
   display: block;
 }
 
-.close-btn:hover {
-  color: #ccc;
+button.close-btn:hover {
+  background: #bbbbbb44;
+}
+
+/* Анимация для перемещения сообщений вверх */
+.notification.fade-up {
+  transform: translateY(-70px); /* Поднимаем старые уведомления вверх */
 }
 
 .notification.fade-out {
-  opacity: 0; 
+  opacity: 0;
+  transform: translateY(-20px); /* Легкое смещение вверх при исчезновении */
+  transition: opacity 0.5s ease, transform 0.5s ease; /* Плавное исчезновение и смещение */
+}
+
+.notification .progress-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 4px;
+  width: 100%;
+  background: linear-gradient(to right, #ffffff, #bbbbbb);
+  border-bottom-left-radius: 5px;
+  animation: progress-animation 5s linear forwards;
+}
+
+@keyframes progress-animation {
+  from {
+    width: 100%;
+  }
+  to {
+    width: 0;
+  }
 }

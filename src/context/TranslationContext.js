@@ -23,7 +23,7 @@ const translations = {
       "footer_2" : "Контакт зі службою підтримки HMessenger",
       "login_notification_success" : "Успішний вхід! Переадресовую...",
       "reg_notification_success" : "Вітаємо в сервісі!",
-      "login_notification_fail" : "Помилка сервера!",
+      "login_notification_fail" : "Упс, щось пішло не так!",
       "reg_notification_fail" : "Упс, щось пішло не так...",
       "email_wrong_format" : "Неправильний формат пошти!",
       "friends_list_notification_error" : "Помилка завантаження списку друзів!",

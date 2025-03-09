@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
-import CustomNotification from '../components/CustomNotification'; 
+import { useNotification } from '../components/NotificationProvider';
+import { useTranslation } from '../context/TranslationContext';
+
 import '../styles/addContact.css'; 
 
 import defaultProfilePhoto from '../assets/media/pics/user-no-profile-pics.png';
@@ -10,6 +12,8 @@ function AddContact() {
   const [notification, setNotification] = useState(null);
   const [selectedUser, setSelectedUser] = useState(null); 
   const [hasSearched, setHasSearched] = useState(false); 
+  const { addNotification } = useNotification();
+  const { translate } = useTranslation();
 
   const handleInputChange = (e) => {
     setSearchTerm(e.target.value);
@@ -19,27 +23,23 @@ function AddContact() {
     const usernamePattern = /^[a-zA-Z]+$/; 
 
     if (searchTerm.length < 3) {
-      setNotification({ message: 'Пожалуйста, введите минимум 3 символа для поиска.', type: 'error' });
+      addNotification(translate('friend_request_typo_min_signs'), 'error');
       return;
     }
 
     if (!usernamePattern.test(searchTerm)) {
-      setNotification({ message: 'Имя пользователя может содержать только латинские буквы без специальных символов!', type: 'error' });
+      addNotification(translate('friend_request_typo_latin'), 'error');
       return;
     }
 
     try {
-      const response = await fetch(`http://localhost:8080/users/search?query=${searchTerm}`);
+      const response = await fetch(`http://192.168.2.100:8080/users/search?query=${searchTerm}`);
       if (response.ok) {
         const data = await response.json();
         console.log(data)
         setResults(data);
-      } else {
-        setNotification({ message: 'Ошибка при поиске пользователей!', type: 'error' });
       }
-    } catch (error) {
-      setNotification({ message: 'Ошибка сервера. Попробуйте позже!', type: 'error' });
-    }
+    } catch (error) {}
     setHasSearched(true);
   };
 
@@ -50,20 +50,16 @@ function AddContact() {
 
   const sendFriendRequest = async () => {
     try {
-      const response = await fetch(`http://localhost:8080/friends/add/${selectedUser.id}`, { 
+      const response = await fetch(`http://192.168.2.100:8080/friends/add/${selectedUser.id}`, { 
         method: 'POST' });
       if (response.ok) {
-        setNotification({ message: 'Запрос в друзья отправлен!', type: 'success' });
+        addNotification(translate('friend_request_sent'), 'success');
       } else {
-        setNotification({ message: 'Не удалось отправить запрос в друзья!', type: 'error' });
+        addNotification(translate('firend_request_error'), 'error');
       }
     } catch (error) {
-      setNotification({ message: 'Ошибка сервера. Попробуйте позже!', type: 'error' });
+      addNotification(translate('friend_request_server_error'), 'error');
     }
-  };
-
-  const closeNotification = () => {
-    setNotification(null);
   };
 
   const closeModal = () => {
@@ -72,26 +68,18 @@ function AddContact() {
 
   return (
     <div className="add-contact-container">
-      <h1>Find Friends</h1>
+      <h1>{translate('find_friends')}</h1>
       
       <div className="search-container">
         <input
           type="text"
           value={searchTerm}
           onChange={handleInputChange}
-          placeholder="Enter username"
+          placeholder={translate('search_enter_username')}
           className="search-input"
         />
-        <button onClick={handleSearch} className="search-button">Search</button>
+        <button onClick={handleSearch} className="search-button">{translate('search')}</button>
       </div>
-
-      {notification && (
-        <CustomNotification
-          message={notification.message}
-          type={notification.type}
-          onClose={closeNotification}
-        />
-      )}
 
       {hasSearched && results.length > 0 ? (
         <ul className="search-result">
@@ -102,7 +90,7 @@ function AddContact() {
           ))}
         </ul>
       ) : (
-        hasSearched && <p>No users found with that username.</p>
+        hasSearched && <p>{translate('friend_request_error_not_found')}</p>
       )}
 
       {selectedUser && (
@@ -110,13 +98,12 @@ function AddContact() {
           <div className="modal-content">
             <h2>{selectedUser.fullName}</h2>
             <img src={selectedUser.photo || defaultProfilePhoto} alt="User" className="user-photo" />
-            <p>Username: {selectedUser.username}</p>
-            <textarea placeholder="Write something about yourself..." className="user-description" />
+            <p>{translate('username')} {selectedUser.username}</p>
             <div className="modal-actions">
-              <button onClick={sendFriendRequest} className="modal-button">Send Friend Request</button>
-              <button className="modal-button">Start Chat</button>
+              <button onClick={sendFriendRequest} className="modal-button">{translate('friend_send_request')}</button>
+              <button className="modal-button">{translate('send_message')}</button>
             </div>
-            <button onClick={closeModal} className="close-button">Close</button>
+            <button onClick={closeModal} className="close-button">{translate('close')}</button>
           </div>
         </div>
       )}

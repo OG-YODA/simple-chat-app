@@ -2,7 +2,9 @@ import React, { useState, useEffect } from 'react';
 import FriendIcon from '../components/FriendIcon';
 import ChatWindow from '../components/ChatWindow';
 import { useNavigate } from 'react-router-dom';
-import CustomNotification from '../components/CustomNotification'; 
+import { useNotification } from '../components/NotificationProvider';
+import { useTranslation } from '../context/TranslationContext';
+
 import '../styles/home.css';
 
 import addUserIcon from '../assets/media/pics/user-add.png';
@@ -13,14 +15,15 @@ function Home() {
   const [friends, setFriends] = useState([]);
   const [selectedFriend, setSelectedFriend] = useState(null);
   const [errors, setErrors] = useState({});
-  const [notification, setNotification] = useState(null); 
+  const { addTemporaryNotification } = useNotification();
+  const { translate } = useTranslation();
 
   // Функция загрузки друзей с бэкенда
   useEffect(() => {
     const fetchFriends = async () => {
       try {
         const response = await fetch('/api/friends'); 
-        if (!response.ok) throw new Error('Ошибка загрузки друзей');
+        if (!response.ok) throw new Error(translate('friends_list_notification_error'));
         
         const data = await response.json();
         const friendsData = data.map(friend => ({
@@ -30,8 +33,8 @@ function Home() {
         
         setFriends(friendsData);
       } catch (error) {
-        console.error('Ошибка загрузки списка друзей:', error);
-        setNotification({ message: 'Ошибка загрузки списка друзей!', type: 'error' });
+        console.error('An error occured during friends list loading. More:', error);
+        addTemporaryNotification(translate('friends_list_notification_error'), 'error' );
         setFriends([]);
       }
     };
@@ -47,10 +50,6 @@ function Home() {
     navigate('/add-contact');
   };
 
-  const closeNotification = () => {
-    setNotification(null); 
-  };
-
   return (
     <div className="home-page">
       {/* Левая панель с аватарами друзей */}
@@ -64,7 +63,7 @@ function Home() {
         )}
         {/* Иконка "добавить друга" */}
         <div className="friend-icon add-friend" onClick={handleAddFriendClick}>
-          <img src={addUserIcon} alt="Добавить друга" width="32" height="32" />
+          <img src={addUserIcon} width="32" height="32" />
         </div>
       </div>
 
@@ -74,19 +73,10 @@ function Home() {
           <ChatWindow friend={selectedFriend} />
         ) : (
           <div className="chat-placeholder">
-            <p>Выберите друга, чтобы открыть чат.</p>
+            <p>{translate('chat_window_select_to_open')}</p>
           </div>
         )}
       </div>
-
-      {/* Отображение уведомления */}
-      {notification && (
-        <CustomNotification
-          message={notification.message}
-          type={notification.type}
-          onClose={closeNotification}
-        />
-      )}
     </div>
   );
 }

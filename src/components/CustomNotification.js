@@ -7,7 +7,7 @@ const CustomNotification = ({ message, type, onClose, style, id }) => {
 
   useEffect(() => {
     // Таймер для плавного исчезновения
-    const fadeTimer = setTimeout(() => setFade(true), 4500); // 4.5 секунды до исчезновения
+    const fadeTimer = setTimeout(() => setFade(true), 4800); // 4.5 секунды до исчезновения
     // Таймер для удаления уведомления
     const closeTimer = setTimeout(() => onClose(id), 5000); // Удаляем уведомление через 5 секунд
 

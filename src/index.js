@@ -4,7 +4,7 @@ import './index.css';
 import App from './App';
 import { BrowserRouter as Router } from 'react-router-dom';
 import { ThemeProvider } from './context/ThemeContext';
-import { AuthProvider } from './context/AuthContext'; // Импортируем AuthProvider
+import { AuthProvider } from './context/AuthContext';
 import { TranslationProvider } from './context/TranslationContext';
 import { NotificationProvider } from './components/NotificationProvider';
 

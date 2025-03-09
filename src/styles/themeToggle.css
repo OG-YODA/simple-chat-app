@@ -31,6 +31,7 @@
   
   .theme-toggle.light .toggle-knob {
     transform: translateX(0);
+    background-color: #585858;
   }
   
   .theme-toggle.dark .toggle-knob {

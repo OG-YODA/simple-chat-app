@@ -116,11 +116,15 @@ function App() {
         </Routes>
       </main>
       
-      <footer>
-      <h5>{translate('footer_1')}</h5>
-      <h6>{translate('footer_2')}</h6>
-      </footer>
+      {!isAuthenticated && (
+        <footer>
+          <h5>{translate('footer_1')}</h5>
+          <h6>{translate('footer_2')}</h6>
+        </footer>)}
+
     </div>
+    
+
   );
 }
 

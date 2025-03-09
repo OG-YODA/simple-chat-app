@@ -29,13 +29,24 @@ function Login() {
     return errors;
   };
 
+  async function getUserIP() {
+    try {
+        const response = await fetch("https://api64.ipify.org?format=json");
+        const data = await response.json();
+        return data.ip;
+    } catch (error) {
+        console.error("IP request error:", error);
+        return null;
+    }
+}
+  
   const handleSubmit = async (e) => {
     e.preventDefault();
     const validationErrors = validate();
 
     if (Object.keys(validationErrors).length === 0) {
         try {
-            const response = await fetch('http://localhost:8080/users/login', {
+            const response = await fetch('http://192.168.2.100:8080/users/login', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -51,9 +62,28 @@ function Login() {
                 const userId = data.userId; 
                 const authToken = "someAuthToken"; 
 
-                addNotification(translate('login_notification_success').message, 'success');
+                async function sendIpOnLogin(userId) {
+                  const ip = await getUserIP();
+                  if (!ip) return;
+              
+                  const response = await fetch("http://192.168.2.100:8080/api/user/ip-check", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ userId, ip })
+                  });
+              
+                  const data = await response.json();
+                  if (data.mismatch) {
+                      await fetch("http://192.168.2.100:8080/api/user/notify", {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({ userId, notificationId: 1 })
+                      });
+                  }
+              }
 
-                // Передайте оба значения в `login`
+                addNotification(translate('login_notification_success'), 'success');
+
                 login(authToken, userId);
 
                 setTimeout(() => {

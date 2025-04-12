@@ -1,11 +1,21 @@
 import React, { useContext } from 'react';
 import {useTranslation} from '../context/TranslationContext';
-import '../styles/languageToggle.css'; 
+import ThemeContext from '../context/ThemeContext';
 
-import translationIcon from '../assets/media/pics/lang.png'; // Исправлен путь
+import '../styles/languageToggle.css'; 
 
 function LanguageToggle() {
   const { language, setLanguage } = useTranslation(); // Используем хук для доступа к контексту
+  const { theme } = useContext(ThemeContext);
+
+  const icons = {
+    lang: {
+        light: require("../assets/media/pics/lang.png"),
+        dark: require("../assets/media/pics/lang_light.png"),
+    }
+  };
+
+  const translationIcon = icons.lang[theme];
 
   return (
     <div className="language-dropdown">

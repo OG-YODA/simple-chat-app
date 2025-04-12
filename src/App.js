@@ -18,17 +18,36 @@ import AuthContext from './context/AuthContext';
 import ThemeContext from './context/ThemeContext';
 import './styles/global.css';
 
-import profileIcon from './assets/media/pics/profile.png';
-import notificationsIcon from './assets/media/pics/notifications.png';
-import settingsIcon from './assets/media/pics/settings.png';
-import messagesIcon from './assets/media/pics/messages.png';
-
 function App() {
   const { isAuthenticated, logout } = useContext(AuthContext); //статус авторизації
   const { theme } = useContext(ThemeContext);
   const location = useLocation();
   const [currentPage, setCurrentPage] = useState(location.pathname);
   const { translate, setLanguage, language } = useTranslation();
+
+  const icons = {
+    profile: {
+        light: require("../src/assets/media/pics/profile.png"),
+        dark: require("../src/assets/media/pics/profile_light.png"),
+    },
+    notifications: {
+        light: require("../src/assets/media/pics/notifications.png"),
+        dark: require("../src/assets/media/pics/notifications_light.png"),
+    },
+    settings: {
+        light: require("../src/assets/media/pics/settings.png"),
+        dark: require("../src/assets/media/pics/settings_light.png"),
+    },
+    messages: {
+        light: require("../src/assets/media/pics/messages.png"),
+        dark: require("../src/assets/media/pics/messages_light.png"),
+    }
+  };
+
+  const profileIcon = icons.profile[theme];
+  const notificationsIcon = icons.notifications[theme];
+  const settingsIcon = icons.settings[theme];
+  const messagesIcon = icons.messages[theme];
 
   useEffect(() => {
     setCurrentPage(location.pathname);

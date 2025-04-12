@@ -4,41 +4,54 @@ import { useNavigate } from 'react-router-dom';
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-    const [isAuthenticated, setAuthenticated] = useState(false);
-    const [userId, setUserId] = useState(null); // Для хранения ID пользователя
     const navigate = useNavigate();
 
-    // Проверка наличия токена при загрузке страницы
+    const [userId, setUserId] = useState(() => localStorage.getItem('userId'));
+    const [accessKey, setAccessKey] = useState(() => localStorage.getItem('accessKey'));
+    const [isAuthenticated, setAuthenticated] = useState(() => localStorage.getItem('isAuthenticated') === 'true');
+    const [isNotifPreloaded, setNotifPreloaded] = useState(false);
+
+    // Лог текущего состояния (не обязательно, но полезно)
     useEffect(() => {
-        const token = localStorage.getItem('authToken');
-        const storedUserId = localStorage.getItem('userId');
+        console.log('[AuthProvider] userId:', userId);
+        console.log('[AuthProvider] accessKey:', accessKey);
+        console.log('[AuthProvider] isAuthenticated:', isAuthenticated);
+    }, [userId, accessKey, isAuthenticated]);
 
-        if (token&&storedUserId) {
-            setAuthenticated(true); // Если токен есть, устанавливаем состояние авторизованным
-            setUserId(storedUserId);
-        }
-        console.log("User ID:", userId);
-    }, []);
-
-    // Функция логина
-    const login = (token, userId) => {
-        localStorage.setItem('authToken', token);
+    const login = (accessKey, userId) => {
         localStorage.setItem('userId', userId);
+        localStorage.setItem('accessKey', accessKey);
+        localStorage.setItem('isAuthenticated', 'true');
+
+        setUserId(userId);
+        setAccessKey(accessKey);
         setAuthenticated(true);
-        setUserId(userId); // Сохраняем ID пользователя
     };
 
-    // Функция выхода
     const logout = () => {
-        localStorage.removeItem('authToken');
         localStorage.removeItem('userId');
+        localStorage.removeItem('accessKey');
+        localStorage.removeItem('isAuthenticated');
+
+        setUserId(null);
+        setAccessKey(null);
         setAuthenticated(false);
-        setUserId(null); // Сбрасываем ID пользователя
+        setNotifPreloaded(false);
+
         navigate('/login');
     };
 
     return (
-        <AuthContext.Provider value={{ isAuthenticated, userId, login, logout }}>
+        <AuthContext.Provider
+            value={{
+                isAuthenticated,
+                isNotifPreloaded,
+                userId,
+                accessKey,
+                login,
+                logout,
+            }}
+        >
             {children}
         </AuthContext.Provider>
     );

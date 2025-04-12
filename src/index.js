@@ -10,17 +10,17 @@ import { NotificationProvider } from './components/NotificationProvider';
 
 ReactDOM.render(
   <React.StrictMode>
-    <ThemeProvider>
-      <NotificationProvider>
-        <TranslationProvider>
-          <Router>
-            <AuthProvider>
+    <Router>
+      <ThemeProvider>
+        <AuthProvider>
+          <NotificationProvider>
+            <TranslationProvider>
               <App />
-            </AuthProvider>
-          </Router>
-        </TranslationProvider>
-      </NotificationProvider>
-    </ThemeProvider>
+            </TranslationProvider>
+          </NotificationProvider>
+        </AuthProvider>
+      </ThemeProvider>
+    </Router>
   </React.StrictMode>,
   document.getElementById('root')
 );

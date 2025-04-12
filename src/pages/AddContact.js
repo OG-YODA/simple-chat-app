@@ -1,18 +1,19 @@
-import React, { useState } from 'react';
-import { useNotification } from '../components/NotificationProvider';
-import { useTranslation } from '../context/TranslationContext';
+import React, { useState, useContext } from "react";
+import AuthContext from "../context/AuthContext";
+import { useNotification } from "../components/NotificationProvider";
+import { useTranslation } from "../context/TranslationContext";
 
-import '../styles/addContact.css'; 
-
-import defaultProfilePhoto from '../assets/media/pics/user-no-profile-pics.png';
+import "../styles/addContact.css";
+import defaultProfilePhoto from "../assets/media/pics/user-no-profile-pics.png";
 
 function AddContact() {
-  const [searchTerm, setSearchTerm] = useState('');
+  const { isAuthenticated, userId } = useContext(AuthContext);
+  const [searchTerm, setSearchTerm] = useState("");
   const [results, setResults] = useState([]);
-  const [notification, setNotification] = useState(null);
-  const [selectedUser, setSelectedUser] = useState(null); 
-  const [hasSearched, setHasSearched] = useState(false); 
-  const { addNotification } = useNotification();
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [hasSearched, setHasSearched] = useState(false);
+  const [hasSentRequest, setHasSentRequest] = useState(false);
+  const { addTemporaryNotification } = useNotification();
   const { translate } = useTranslation();
 
   const handleInputChange = (e) => {
@@ -20,90 +21,118 @@ function AddContact() {
   };
 
   const handleSearch = async () => {
-    const usernamePattern = /^[a-zA-Z]+$/; 
+    const usernamePattern = /^[a-zA-Z]+$/;
 
-    if (searchTerm.length < 3) {
-      addNotification(translate('friend_request_typo_min_signs'), 'error');
+    if (searchTerm.trim().length < 2) {
+      addTemporaryNotification(translate("friend_request_typo_min_signs"), "error");
       return;
     }
 
     if (!usernamePattern.test(searchTerm)) {
-      addNotification(translate('friend_request_typo_latin'), 'error');
+      addTemporaryNotification(translate("friend_request_typo_latin"), "error");
       return;
     }
 
     try {
-      const response = await fetch(`http://192.168.2.100:8080/users/search?query=${searchTerm}`);
+      console.log("Searching for user:", searchTerm);
+      const response = await fetch(`http://192.168.2.100:8080/friends/search?query=${searchTerm}`);
       if (response.ok) {
         const data = await response.json();
-        console.log(data)
+        console.log(data);
         setResults(data);
       }
-    } catch (error) {}
+    } catch (error) {
+      console.log("Error searching for user!");
+    }
     setHasSearched(true);
   };
 
-  const handleUserSelect = async (user) => {
+  const handleUserSelect = (user) => {
     setSelectedUser(user);
     setResults([]);
   };
 
   const sendFriendRequest = async () => {
+    if (!userId || !selectedUser?.username) return;
+  
     try {
-      const response = await fetch(`http://192.168.2.100:8080/friends/add/${selectedUser.id}`, { 
-        method: 'POST' });
+      const params = new URLSearchParams({
+        senderId: userId,
+        receiverUsername: selectedUser.username,
+      });
+  
+      const response = await fetch(`http://192.168.2.100:8080/friends/send?${params.toString()}`, {
+        method: "POST",
+      });
+  
+      const result = await response.text();
       if (response.ok) {
-        addNotification(translate('friend_request_sent'), 'success');
+        addTemporaryNotification(result, "success");
+        setHasSentRequest(true);
       } else {
-        addNotification(translate('firend_request_error'), 'error');
+        addTemporaryNotification(result, "error");
       }
-    } catch (error) {
-      addNotification(translate('friend_request_server_error'), 'error');
+    } catch (err) {
+      console.error("Error sending friend request:", err);
+      addTemporaryNotification("Ошибка при отправке запроса", "error");
     }
-  };
-
-  const closeModal = () => {
-    setSelectedUser(null);
   };
 
   return (
     <div className="add-contact-container">
-      <h1>{translate('find_friends')}</h1>
-      
+      <h1>{translate("find_friends")}</h1>
+
       <div className="search-container">
         <input
           type="text"
           value={searchTerm}
           onChange={handleInputChange}
-          placeholder={translate('search_enter_username')}
+          placeholder={translate("search_enter_username")}
           className="search-input"
         />
-        <button onClick={handleSearch} className="search-button">{translate('search')}</button>
+        <button onClick={handleSearch} className="search-button">
+          {translate("search")}
+        </button>
       </div>
 
       {hasSearched && results.length > 0 ? (
         <ul className="search-result">
-          {results.map(user => (
-            <li key={user.id} onClick={() => handleUserSelect(user)} className="search-item">
-              {user.username} - {user.fullName}
+          {results.map((user) => (
+            <li key={user.id} className="search-item" onClick={() => handleUserSelect(user)}>
+              <img src={defaultProfilePhoto} alt="User" className="user-avatar" />
+              <div className="user-info">
+                <p className="user-fullname">{user.firstname} {user.lastname}</p>
+                <p className="user-username">@{user.username}</p>
+              </div>
             </li>
           ))}
         </ul>
       ) : (
-        hasSearched && <p>{translate('friend_request_error_not_found')}</p>
+        hasSearched && <p>{translate("friend_request_error_not_found")}</p>
       )}
 
       {selectedUser && (
         <div className="modal-overlay">
           <div className="modal-content">
-            <h2>{selectedUser.fullName}</h2>
+            <h2>{selectedUser.firstname} {selectedUser.lastname}</h2>
             <img src={selectedUser.photo || defaultProfilePhoto} alt="User" className="user-photo" />
-            <p>{translate('username')} {selectedUser.username}</p>
+            <p>@{selectedUser.username}</p>
             <div className="modal-actions">
-              <button onClick={sendFriendRequest} className="modal-button">{translate('friend_send_request')}</button>
-              <button className="modal-button">{translate('send_message')}</button>
+              {hasSentRequest ? (
+                <button className="modal-button" disabled>
+                  {translate("friend_request_sent")}
+                </button>
+              ) : (
+                <button className="modal-button" onClick={sendFriendRequest}>
+                  {translate("friend_send_request")}
+                </button>
+              )}
+              <button className="modal-button">
+                {translate("send_message")}</button>
             </div>
-            <button onClick={closeModal} className="close-button">{translate('close')}</button>
+            <button className="close-button" onClick={() => setSelectedUser(null)}>
+              {translate("close")}
+            </button>
           </div>
         </div>
       )}

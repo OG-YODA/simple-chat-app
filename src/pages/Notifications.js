@@ -1,38 +1,37 @@
 import React, { useEffect, useState, useContext } from "react";
 import AuthContext from "../context/AuthContext";
+import ThemeContext from '../context/ThemeContext';
 import { useNotification } from "../components/NotificationProvider";
 import { useTranslation } from "../context/TranslationContext";
+
+import refreshButtonDark from "../assets/media/pics/reload.png";
+import refreshButtonLight from "../assets/media/pics/reload_light.png";
 
 import "../styles/notifications.css";
 
 function Notifications() {
-    const { isAuthenticated, userId } = useContext(AuthContext);
-    const { notifications, addNotification, showNotification, addTemporaryNotification } = useNotification();
+    const { isAuthenticated, userId} = useContext(AuthContext);
+    const { notifications, addNotification, addTemporaryNotification } = useNotification();
     const { translate } = useTranslation();
+    const { theme } = useContext(ThemeContext);
     const [loading, setLoading] = useState(false);
+    const [notifLoaded, setNotifLoaded] = useState(false);
 
-    useEffect(() => {
-        console.log("useEffect вызван");
-
-        checkServer();
-
-        fetchNotifications();
-    }, [userId]);
-
-    const checkServer = async () => {
-        console.log("Проверка соединения с сервером...");
-        try {
-            const response = await fetch("http://192.168.2.100:8080/notifications/test");
-            console.log("Ответ от сервера получен:", response);
-            if (response.ok) {
-                console.log("Сервер доступен");
-            } else {
-                console.log(`Сервер недоступен (код ${response.status})`);
-            }
-        } catch (error) {
-            console.error("Ошибка соединения с сервером:", error);
+    const icons = {
+        refresh: {
+            light: require("../assets/media/pics/reload.png"),
+            dark: require("../assets/media/pics/reload_light.png"),
         }
     };
+
+    const refreshButton = icons.refresh[theme];
+
+    useEffect(() => {
+        if (!notifLoaded){
+            fetchNotifications();
+            setNotifLoaded(true);
+        }
+    }, [userId]);
 
     const fetchNotifications = async () => {
         if (loading || !userId) return;
@@ -44,7 +43,7 @@ function Notifications() {
             const data = await response.json(); // Получаем массив уведомлений из JSON
             console.log("Fetched notifications:", data);
     
-            showNotifications(data); // Передаём данные в showNotifications
+            updateNotifications(data); // Передаём данные в showNotifications
     
         } catch (error) {
             addTemporaryNotification(translate("notification-load-error"), "error");
@@ -53,9 +52,78 @@ function Notifications() {
         }
     };
 
-    const showNotifications = (data) => {
-        console.log("Showing notifications:", data);
-        data.forEach(notif => notifications.push(notif)); // Добавляем уведомления в notifications
+    const updateNotifications = (data) => {
+        console.log("Updating notifications list...");
+        notifications.length = 0; // Полностью очищаем массив перед обновлением
+        data.forEach(notif => notifications.push(notif)); // Добавляем новые уведомления
+    };
+
+    const handleFriendRequestResponse = async (requestId, accepted) => {
+        try {
+            const url = `http://192.168.2.100:8080/friends/respond?requestId=${requestId}&accepted=${accepted}`;
+    
+            const response = await fetch(url, {
+                method: "POST"
+            });
+    
+            const result = await response.text();
+    
+            if (response.ok) {
+                addTemporaryNotification(result, "success");
+                fetchNotifications(); // Обновим список после ответа
+            } else {
+                addTemporaryNotification(result || "Ошибка обработки запроса", "error");
+            }
+        } catch (err) {
+            console.error("Error responding to friend request:", err);
+            addTemporaryNotification("Ошибка при ответе на запрос в друзья", "error");
+        }
+    };
+
+    // Функция для рендеринга контента уведомлений
+    const renderNotificationContent = (notif) => {
+        switch (notif.type) {
+            case "friend_request":
+                let additional = {};
+                try {
+                    additional = JSON.parse(notif.additional);
+                } catch (e) {
+                    console.error("Parse error - additional:", e);
+                }
+
+                return (
+                    <>
+                        <p className="notif-message">
+                            {translate("friend-request")
+                                .replace("{firstName}", additional.senderName || " ? ")
+                                .replace("{lastName}", additional.senderSurname || " ? ")}
+                        </p>
+                        <div className="friend-request-actions">
+                            <button onClick={() => handleFriendRequestResponse(additional.requestId, true)} className="accept-btn">
+                                {translate("accept")}
+                            </button>
+                            <button onClick={() => handleFriendRequestResponse(additional.requestId, false)} className="decline-btn">
+                                {translate("decline")}
+                            </button>
+                        </div>
+                    </>
+                );
+            case "message":
+                return (
+                    <>
+                        <p className="notif-message">{notif.message}</p>
+                        <span className="notif-type">{translate("message")}</span>
+                    </>
+                );
+            // Добавляем другие типы уведомлений по мере необходимости
+            default:
+                return (
+                    <>
+                        <p className="notif-message">{notif.message}</p>
+                        <span className="notif-type">{translate(notif.type)}</span>
+                    </>
+                );
+        }
     };
 
     const addTestTemporaryNotification = () => {
@@ -83,8 +151,21 @@ function Notifications() {
         <div className="content">
             {isAuthenticated ? (
                 <>
+                    <div className="notifications-container">
+                        {Array.isArray(notifications) && notifications.length > 0 ? (
+                            notifications.map((notif) => (
+                                <div key={notif.id} className="notification-block">
+                                    {renderNotificationContent(notif)}
+                                    <span className="notif-time">{new Date(notif.timestamp).toLocaleString()}</span>
+                                </div>
+                            ))
+                        ) : (
+                            <p>{translate("empty-notifications-list")}</p>
+                        )}
+                    </div>
                     <button className="refresh-btn" onClick={fetchNotifications} disabled={loading}>
-                        {translate(loading ? "Loading..." : "Refresh Notifications")}
+                        {translate(loading ? "Loading..." : "")}
+                        <img src={refreshButton} alt="Refresh" width="32" height="32"/>
                     </button>
                     <button className="test-temp-btn" onClick={addTestTemporaryNotification}>
                         Добавить временное уведомление
@@ -92,25 +173,6 @@ function Notifications() {
                     <button className="test-persist-btn" onClick={addTestPersistentNotification}>
                         Добавить постоянное уведомление
                     </button>
-                    <div className="notifications-container">
-                        {Array.isArray(notifications) && notifications.length > 0 ? (
-                            notifications.map((notif) => (
-                                <div key={notif.id} className="notification-block">
-                                    <span className="notif-id">ID: {notif.id}</span>
-                                    <p className="notif-message">{notif.message}</p>
-                                    <span className="notif-type">{translate(notif.type)}</span>
-                                    <span className="notif-time">{new Date(notif.timestamp).toLocaleString()}</span>
-                                    {notif.type === "friendRequest" && notif.additional?.link && (
-                                        <a href={notif.additional.link} className="notif-link">
-                                            {translate("View Request")}
-                                        </a>
-                                    )}
-                                </div>
-                            ))
-                        ) : (
-                            <p>{translate("empty-notifications-list")}</p>
-                        )}
-                    </div>
                 </>
             ) : (
                 <div className="banner">

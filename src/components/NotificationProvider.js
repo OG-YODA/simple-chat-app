@@ -1,5 +1,9 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import CustomNotification from "./CustomNotification";
+import AuthContext from "../context/AuthContext";
+import SockJS from "sockjs-client";
+import { CompatClient, Stomp } from "@stomp/stompjs";
+
 import "../styles/notification.css";
 
 const NotificationContext = createContext();
@@ -7,13 +11,76 @@ const NotificationContext = createContext();
 export const NotificationProvider = ({ children }) => {
     const [notifications, setNotifications] = useState([]);
     const [temporaryNotifications, setTemporaryNotifications] = useState([]);
+    const {isAuthenticated} = useContext(AuthContext);
+    const [isNotifPreloaded, setNotifPreloaded] = useState(false);
+    const [ws, setWs] = useState(null);
 
-    const WS_URL = process.env.REACT_APP_WS_URL || "ws://192.168.2.100:8080/ws/app/notifications";
+    const WS_URL = process.env.REACT_APP_WS_URL || "http://192.168.2.100:8080/ws";
     const API_URL = process.env.REACT_APP_API_URL || "http://192.168.2.100:8080/notifications";
 
     useEffect(() => {
         console.log("useEffect triggered");
-    }, []);
+    
+        if (isAuthenticated === true) {
+            console.log("User is authenticated, connecting to WebSocket...");
+            let attempts = 0;
+            const maxAttempts = 3;
+            let stompClient = null;
+    
+            const connectWebSocket = () => {
+                console.log("Attempting to connect to WebSocket...", `Attempt ${attempts + 1}`);
+                
+                const userId = localStorage.getItem("userId");
+                const accessKey = localStorage.getItem("accessKey");
+                
+                const socket = new SockJS(`${WS_URL}?userId=${userId}`);
+                stompClient = Stomp.over(socket);
+                stompClient.reconnect_delay = 0; // отключаем встроенный авто-реконнект
+    
+                stompClient.connect(
+                    { userId, accessKey },
+                    (frame) => {
+                        console.log("STOMP connection established:", frame);
+                        addTemporaryNotification("WebSocket connected", "success"); // Temporary notification on successful connection
+                        console.log("userId used for WS connect:", userId);
+                        setWs(stompClient);
+    
+                        stompClient.subscribe(`/user/${userId}/queue/messages`, (msg) => {
+                            console.log("Got private message:", msg.body);
+                            try {
+                                const notification = JSON.parse(msg.body);
+                                addTemporaryNotification(notification.message, "success"); // Show temporary notification
+                            } catch (error) {
+                                console.error("Error parsing WebSocket message:", error);
+                            }
+                        });
+                    },
+                    (error) => {
+                        console.error("STOMP connection error:", error);
+                        if (attempts < maxAttempts) {
+                            attempts++;
+                            console.log(`Reattempting STOMP connection in 5 seconds... (Attempt ${attempts})`);
+                            setTimeout(connectWebSocket, 5000);
+                        } else {
+                            console.error("Max STOMP connection attempts reached. Stopping reconnection attempts.");
+                        }
+                    }
+                );
+            };
+    
+            connectWebSocket();
+    
+            return () => {
+                if (stompClient && stompClient.connected) {
+                    stompClient.disconnect(() => {
+                        console.log("STOMP disconnected");
+                    });
+                }
+            };
+        } else {
+            console.log("User is not authenticated, skipping WebSocket connection.");
+        }
+    }, [isAuthenticated]); // Add isAuthenticated dependency to reconnect when user logs in
 
     const fetchNotification = async () => {
         console.log("Fetching notifications");

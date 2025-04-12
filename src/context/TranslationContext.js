@@ -60,6 +60,9 @@ const translations = {
       "empty-notifications-list" : "Список сповіщень порожній",
       "notification-load-error" : "Помилка завантаження сповіщень",
       "notification-read" : "Прочитане",
+      "friend-request": "Користувач {firstName} {lastName} надіслав вам запит в друзі!",
+      "accept": "Прийняти",
+      "decline": "Відхилити",
     },
     "en":{
       "main" : "Main",
@@ -120,6 +123,9 @@ const translations = {
       "empty-notifications-list" : "Список сповіщень порожній",
       "notification-load-error" : "Помилка завантаження сповіщень",
       "notification-read" : "Прочитане",
+      "friend-request": "Користувач {firstName} {lastName} надіслав вам запит в друзі!",
+      "accept": "Прийняти",
+      "decline": "Відхилити",
     }
 };
 

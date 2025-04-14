@@ -97,19 +97,6 @@
     margin-top: 20px;
 }
 
-/* Стили для окна с кругом */
-.crop-container {
-    position: relative;
-    width: 300px;
-    height: 300px;
-    margin: 20px auto;
-    border-radius: 50%;
-    overflow: hidden;
-    border: 3px solid #ddd;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    cursor: grab;
-}
-
 .crop-image {
     position: absolute;
     top: 0;
@@ -120,12 +107,6 @@
 
 .crop-container:active {
     cursor: grabbing;
-}
-
-.crop-controls {
-    display: flex;
-    justify-content: center;
-    margin-top: 20px;
 }
 
 .crop-controls button {

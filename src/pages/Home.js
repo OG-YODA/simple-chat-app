@@ -1,22 +1,33 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useNotification } from '../components/NotificationProvider';
 import { useTranslation } from '../context/TranslationContext';
+
 import ChatWindow from '../components/ChatWindow';
 import AuthContext from '../context/AuthContext';
+import ThemeContext from '../context/ThemeContext';
 
 import '../styles/home.css';
 
-import addUserIcon from '../assets/media/pics/user-add.png';
 import userNoProfilePhoto from '../assets/media/pics/user-no-profile-pics.png';
 
 function Home() {
   const navigate = useNavigate();
+  const { theme } = useContext(ThemeContext);
   const [friends, setFriends] = useState([]);
   const [selectedFriend, setSelectedFriend] = useState(null);
   const { isAuthenticated, userId } = React.useContext(AuthContext); // Получаем userId из контекста
   const { addTemporaryNotification } = useNotification();
   const { translate } = useTranslation();
+
+  const icons ={
+    addUser: {
+      light: require("../assets/media/pics/user-add.png"),
+      dark: require("../assets/media/pics/user-add_light.png"),
+    }
+  }
+
+  const addUserIcon = icons.addUser[theme]; // Получаем иконку в зависимости от темы
 
   // Функция загрузки друзей с бэкенда
   useEffect(() => {
@@ -85,7 +96,7 @@ function Home() {
             </div>
           ))
         ) : (
-          <p>{translate('no_friends')}</p> // Если друзей нет, показываем сообщение
+          <p></p>
         )}
         {/* Иконка "добавить друга" */}
         <div className="friend-icon add-friend" onClick={handleAddFriendClick}>

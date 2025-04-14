@@ -1,68 +1,84 @@
-import React, { useRef, useState } from 'react';
-import PropTypes from 'prop-types';
+import React, { useState, useCallback } from 'react';
+import Cropper from 'react-easy-crop';
+
+import '../styles/imageCropper.css'; // Импортируйте CSS файл для стилей компонента
 
 function ImageCropper({ imageSrc, onSave, onCancel }) {
-    const [position, setPosition] = useState({ x: 0, y: 0 });
-    const [scale, setScale] = useState(1);
-    const isDragging = useRef(false);
-    const startPos = useRef({ x: 0, y: 0 });
+    const [crop, setCrop] = useState({ x: 0, y: 0 });
+    const [zoom, setZoom] = useState(1);
+    const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
 
-    const handleMouseDown = (e) => {
-        isDragging.current = true;
-        startPos.current = {
-            x: e.clientX - position.x,
-            y: e.clientY - position.y,
-        };
+    const onCropComplete = useCallback((_, croppedPixels) => {
+        setCroppedAreaPixels(croppedPixels);
+    }, []);
+
+    const handleSave = async () => {
+        const croppedImage = await getCroppedImg(imageSrc, croppedAreaPixels);
+        onSave(croppedImage);
     };
 
-    const handleMouseMove = (e) => {
-        if (isDragging.current) {
-            setPosition({
-                x: e.clientX - startPos.current.x,
-                y: e.clientY - startPos.current.y,
-            });
-        }
-    };
-
-    const handleMouseUp = () => {
-        isDragging.current = false;
-    };
-
-    const handleWheel = (e) => {
-        setScale((prevScale) => Math.max(0.5, Math.min(3, prevScale - e.deltaY * 0.001)));
-    };
+    function getCroppedImg(imageSrc, pixelCrop) {
+        return new Promise((resolve, reject) => {
+            const image = new Image();
+            image.crossOrigin = 'anonymous';
+            image.src = imageSrc;
+    
+            image.onload = () => {
+                const canvas = document.createElement('canvas');
+                canvas.width = pixelCrop.width;
+                canvas.height = pixelCrop.height;
+                const ctx = canvas.getContext('2d');
+    
+                ctx.drawImage(
+                    image,
+                    pixelCrop.x,
+                    pixelCrop.y,
+                    pixelCrop.width,
+                    pixelCrop.height,
+                    0,
+                    0,
+                    pixelCrop.width,
+                    pixelCrop.height
+                );
+    
+                canvas.toBlob((blob) => {
+                    if (!blob) {
+                        console.error('Canvas is empty');
+                        return reject(new Error('Canvas is empty'));
+                    }
+                    blob.name = 'cropped.jpeg';
+                    const fileUrl = URL.createObjectURL(blob);
+                    resolve({ blob, fileUrl });
+                }, 'image/jpeg');
+            };
+    
+            image.onerror = () => reject(new Error('Failed to load image'));
+        });
+    }
 
     return (
-        <div className="cropper-modal">
-            <div
-                className="crop-container"
-                onMouseDown={handleMouseDown}
-                onMouseMove={handleMouseMove}
-                onMouseUp={handleMouseUp}
-                onMouseLeave={handleMouseUp}
-                onWheel={handleWheel}
-            >
-                <img
-                    src={imageSrc}
-                    alt="Crop"
-                    className="crop-image"
-                    style={{
-                        transform: `translate(${position.x}px, ${position.y}px) scale(${scale})`,
-                    }}
+        <div className="cropper-wrapper">
+            <div className="cropper-container">
+                <Cropper
+                    image={imageSrc}
+                    crop={crop}
+                    zoom={zoom}
+                    aspect={1}
+                    cropShape="round"
+                    showGrid={false}
+                    onCropChange={setCrop}
+                    onZoomChange={setZoom}
+                    onCropComplete={onCropComplete}
+                    objectFit="cover"
+                    disableScrollZoom={true}
                 />
             </div>
-            <div className="crop-controls">
-                <button onClick={onCancel} className="cancel-button">Cancel</button>
-                <button onClick={() => onSave(position, scale)}>Save</button>
+            <div className="cropper-controls">
+                <button onClick={handleSave}>Сохранить</button>
+                <button onClick={onCancel}>Отмена</button>
             </div>
         </div>
     );
 }
-
-ImageCropper.propTypes = {
-    imageSrc: PropTypes.string.isRequired,
-    onSave: PropTypes.func.isRequired,
-    onCancel: PropTypes.func.isRequired,
-};
 
 export default ImageCropper;

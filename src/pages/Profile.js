@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { useNotification } from '../components/NotificationProvider';
-import AuthContext from '../context/AuthContext';
 import { useTranslation } from '../context/TranslationContext';
-
+import AuthContext from '../context/AuthContext';
 import ImageCropper from '../components/ImageCropper';
+
 import '../styles/profile.css';
 
 import defaultProfilePhoto from '../assets/media/pics/profile-no-photo-512.png';
@@ -20,51 +20,58 @@ function Profile() {
     const [showPhotoModal, setShowPhotoModal] = useState(false);
     const [showCropper, setShowCropper] = useState(false);
     const [uploadedImage, setUploadedImage] = useState(null);
+    const [originalFile, setOriginalFile] = useState(null);
+
     const { addNotification } = useNotification();
     const { translate } = useTranslation();
+
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
 
     useEffect(() => {
         const fetchData = async () => {
             try {
-                // Проверяем локальное хранилище
-                const cachedData = localStorage.getItem(`profileData_${userId}`);
-                if (cachedData) {
-                    setProfileData(JSON.parse(cachedData));
-                    return;
-                }
-
-                const response = await fetch(`http://192.168.2.100:8080/users/profile/${userId}`);
+                const response = await fetch(`http://192.168.2.100:8080/profile/refreshProfileData/${userId}`);
                 if (response.ok) {
                     const data = await response.json();
+                    const serverPhotoName = data.photoName;
 
-                    console.log("Received data:", data);
+                    const localAvatarName = localStorage.getItem("userAvatarName");
+                    const localAvatar = localStorage.getItem("userAvatar");
 
-                    const newData = {
+                    let photoToUse = defaultProfilePhoto;
+
+                    if (localAvatarName === serverPhotoName) {
+                        photoToUse = localAvatar;
+                    } else if (serverPhotoName) {
+                        const imgRes = await fetch(`http://192.168.2.100:8080/users/getAvatar/${userId}`);
+                        const blob = await imgRes.blob();
+                        const reader = new FileReader();
+                        reader.onloadend = () => {
+                            const base64 = reader.result;
+                            localStorage.setItem("userAvatar", base64);
+                            localStorage.setItem("userAvatarName", serverPhotoName);
+                            setProfileData({
+                                fullName: data.fullName || 'none',
+                                username: data.username || 'none',
+                                photo: base64,
+                                description: data.description || 'none'
+                            });
+                        };
+                        reader.readAsDataURL(blob);
+                        return;
+                    }
+
+                    setProfileData({
                         fullName: data.fullName || 'none',
                         username: data.username || 'none',
-                        photo: data.photo || defaultProfilePhoto,
+                        photo: photoToUse,
                         description: data.description || 'none'
-                    };
-                    setProfileData(newData);
-                    localStorage.setItem(`profileData_${userId}`, JSON.stringify(newData));
-                } else {
-                    const errorData = await response.json();
-                    addNotification(translate('profile_error'), 'error');
-                    setProfileData({
-                        fullName: 'none',
-                        username: 'none',
-                        photo: defaultProfilePhoto,
-                        description: 'none'
                     });
+                } else {
+                    addNotification(translate('profile_error'), 'error');
                 }
             } catch (error) {
                 addNotification(translate('profile_error'), 'error');
-                setProfileData({
-                    fullName: 'none',
-                    username: 'none',
-                    photo: defaultProfilePhoto,
-                    description: 'none'
-                });
             }
         };
 
@@ -73,48 +80,60 @@ function Profile() {
         }
     }, [isAuthenticated, userId]);
 
-    const handlePhotoSubmit = async (sourceType) => {
-        try{
-            const formData = new FormData();
+    const handleFileChange = (event) => {
+        const file = event.target.files[0];
+        if (!file) return;
 
-            if (sourceType === 'storage') {
-                const fileInput = document.getElementById('fileInput');
-                if (fileInput.files.length > 0) {
-                    const file = fileInput.files[0];
-                    const imageUrl = URL.createObjectURL(file);
-                    setUploadedImage(imageUrl);
-                    setShowPhotoModal(false);
-                    setShowCropper(true);
-                    formData.append('file', fileInput.files[0]);
-                }
-            }
-
-            const response = await fetch(`http://192.168.2.100:8080/users/setProfilePic/${sourceType}`, {
-                method: 'POST',
-                body: formData
-            });
-
-            if (response.ok) {
-                const updatedPhoto = await response.json();
-                setProfileData((prevData) => ({ ...prevData, photo: updatedPhoto.photo }));
-                // Обновляем локальное хранилище
-                localStorage.setItem(`profileData_${userId}`, JSON.stringify({ ...profileData, photo: updatedPhoto.photo }));
-                addNotification(translate('photo_update_success'), 'success');
-                setShowPhotoModal(false);
-            } else {
-                addNotification(translate('photo_update_failed'), 'error');
-            }
-
-        } catch (error) {
-            addNotification(translate('photo_update_failed'), 'error');
+        if (!allowedTypes.includes(file.type)) {
+            addNotification(translate('unsupported_file_format'), 'error');
+            return;
         }
+
+        const imageUrl = URL.createObjectURL(file);
+        setUploadedImage({ url: imageUrl });
+        setOriginalFile(file);
+        setShowCropper(true);
     };
 
-    const handleCropSave = (croppedPosition, croppedScale) => {
-        // Здесь ты можешь дополнительно обработать `croppedPosition` и `croppedScale`,
-        // например, отправить их на сервер или сохранить локально.
-        setProfileData((prevData) => ({ ...prevData, photo: uploadedImage }));
-        addNotification(translate('photo_updated_success'), 'success');
+    const handleCropSave = (croppedBlob) => {
+        if (!originalFile) return;
+
+        const extension = originalFile.name.split('.').pop().toLowerCase();
+        const timestamp = Date.now();
+        const newFilename = `${timestamp}.${extension}`;
+
+        const renamedFile = new File([croppedBlob], newFilename, { type: croppedBlob.type });
+
+        const formData = new FormData();
+        formData.append('avatar', renamedFile);
+        formData.append('userId', userId);
+        formData.append('securityKey', localStorage.getItem('securityKey'));
+
+        fetch('http://192.168.2.100:8080/profile/update-avatar', {
+            method: 'POST',
+            body: formData
+        })
+            .then(res => res.ok ? res.json() : Promise.reject())
+            .then(data => {
+                // Преобразуем отправленный файл в base64 и сохраняем
+                const reader = new FileReader();
+                reader.onloadend = () => {
+                    const base64 = reader.result;
+                    localStorage.setItem("userAvatar", base64);
+                    localStorage.setItem("userAvatarName", newFilename);
+                    setProfileData(prev => ({ ...prev, photo: base64 }));
+                    addNotification(translate('photo_update_success'), 'success');
+                    setShowCropper(false);
+                    setShowPhotoModal(false);
+                };
+                reader.readAsDataURL(renamedFile);
+            })
+            .catch(() => {
+                addNotification(translate('photo_update_failed'), 'error');
+            });
+    };
+
+    const handleCropCancel = () => {
         setShowCropper(false);
     };
 
@@ -143,10 +162,7 @@ function Profile() {
                         <div className="modal-overlay">
                             <div className="modal">
                                 <h2>{translate('choose_photo_source')}</h2>
-                                <input type="file" id="fileInput" />
-                                <button onClick={() => handlePhotoSubmit('local')}>
-                                    {translate('upload_from_device')}
-                                </button>
+                                <input type="file" id="fileInput" onChange={handleFileChange} accept="image/*" />
                                 <button className="close-modal" onClick={() => setShowPhotoModal(false)}>
                                     {translate('close')}
                                 </button>
@@ -154,12 +170,16 @@ function Profile() {
                         </div>
                     )}
 
-                    {showCropper && (
-                        <ImageCropper
-                            imageSrc={uploadedImage}
-                            onSave={handleCropSave}
-                            onCancel={() => setShowCropper(false)}
-                        />
+                    {showCropper && uploadedImage && (
+                        <div className="modal-overlay">
+                            <div className="modal">
+                                <ImageCropper
+                                    imageSrc={uploadedImage.url}
+                                    onSave={handleCropSave}
+                                    onCancel={handleCropCancel}
+                                />
+                            </div>
+                        </div>
                     )}
                 </>
             ) : (

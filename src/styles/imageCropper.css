@@ -1,0 +1,37 @@
+.cropper-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+  }
+  
+  /* Сам кружок */
+  .cropper-container {
+    position: relative;
+    width: 300px;
+    height: 300px;
+    background: #000;
+    border-radius: 50%;
+    overflow: hidden;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+  }
+  
+  /* Кнопки */
+  .cropper-controls {
+    margin-top: 20px;
+    display: flex;
+    gap: 10px;
+  }
+  
+  .cropper-controls button {
+    padding: 8px 16px;
+    border-radius: 8px;
+    background-color: #222;
+    color: white;
+    border: none;
+    cursor: pointer;
+  }
+  
+  .cropper-controls button:hover {
+    background-color: #444;
+  }

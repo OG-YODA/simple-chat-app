@@ -1,20 +1,29 @@
 import React, { useState, useCallback } from 'react';
+import { useTranslation } from '../context/TranslationContext';
 import Cropper from 'react-easy-crop';
 
 import '../styles/imageCropper.css'; // Импортируйте CSS файл для стилей компонента
 
 function ImageCropper({ imageSrc, onSave, onCancel }) {
+    const { translate } = useTranslation();
     const [crop, setCrop] = useState({ x: 0, y: 0 });
     const [zoom, setZoom] = useState(1);
     const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
 
     const onCropComplete = useCallback((_, croppedPixels) => {
+        console.log("[Cropper] Cropped area:", croppedPixels);
         setCroppedAreaPixels(croppedPixels);
     }, []);
 
     const handleSave = async () => {
-        const croppedImage = await getCroppedImg(imageSrc, croppedAreaPixels);
-        onSave(croppedImage);
+        console.log("[Cropper] Start generating cropped image...");
+        try {
+            const croppedImage = await getCroppedImg(imageSrc, croppedAreaPixels);
+            console.log("[Cropper] Cropped image ready:", croppedImage);
+            onSave(croppedImage);
+        } catch (err) {
+            console.error("[Cropper] Failed to crop image:", err);
+        }
     };
 
     function getCroppedImg(imageSrc, pixelCrop) {
@@ -22,13 +31,13 @@ function ImageCropper({ imageSrc, onSave, onCancel }) {
             const image = new Image();
             image.crossOrigin = 'anonymous';
             image.src = imageSrc;
-    
+
             image.onload = () => {
                 const canvas = document.createElement('canvas');
                 canvas.width = pixelCrop.width;
                 canvas.height = pixelCrop.height;
                 const ctx = canvas.getContext('2d');
-    
+
                 ctx.drawImage(
                     image,
                     pixelCrop.x,
@@ -40,19 +49,26 @@ function ImageCropper({ imageSrc, onSave, onCancel }) {
                     pixelCrop.width,
                     pixelCrop.height
                 );
-    
+
                 canvas.toBlob((blob) => {
                     if (!blob) {
-                        console.error('Canvas is empty');
+                        console.error("[Cropper] Canvas is empty");
                         return reject(new Error('Canvas is empty'));
                     }
+
+                    console.log(`[Cropper] Cropped image blob size: ${blob.size} bytes (${(blob.size / 1024).toFixed(2)} KB)`);
+
+                    console.log("[Cropper] Cropped blob created");
                     blob.name = 'cropped.jpeg';
                     const fileUrl = URL.createObjectURL(blob);
                     resolve({ blob, fileUrl });
                 }, 'image/jpeg');
             };
-    
-            image.onerror = () => reject(new Error('Failed to load image'));
+
+            image.onerror = () => {
+                console.error("[Cropper] Image failed to load");
+                reject(new Error('Failed to load image'));
+            };
         });
     }
 
@@ -74,8 +90,8 @@ function ImageCropper({ imageSrc, onSave, onCancel }) {
                 />
             </div>
             <div className="cropper-controls">
-                <button onClick={handleSave}>Сохранить</button>
-                <button onClick={onCancel}>Отмена</button>
+                <button onClick={handleSave}>{translate('save_button')}</button>
+                <button onClick={onCancel}>{translate('cancel_button')}</button>
             </div>
         </div>
     );

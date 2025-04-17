@@ -33,43 +33,72 @@ function Home() {
   useEffect(() => {
     const fetchFriends = async () => {
       console.log("Fetching friends from the server...");
-      const userId = localStorage.getItem('userId'); // Получаем userId из localStorage
-      
+      const userId = localStorage.getItem('userId');
+  
       if (!userId) {
         console.error('User ID not found in localStorage');
         return;
       }
-
+  
       try {
-        const response = await fetch(`http://192.168.2.100:8080/users/friends/${userId}`); // Передаем ID пользователя в URL
+        const response = await fetch(`http://192.168.2.100:8080/users/friends/${userId}`);
         if (!response.ok) {
           console.error('Failed to fetch friends. Response not OK:', response);
           throw new Error('Server responded with error');
         }
-    
-        const text = await response.text();  // Прочитаем ответ как текст
+  
+        const text = await response.text();
         try {
-          const data = JSON.parse(text);  // Попробуем преобразовать в JSON
-          console.log("Successfully fetched friends:", data);  // Логируем полученные данные
-          const friendsData = data.map(friend => ({
-            ...friend,
-            avatar: friend.photo || userNoProfilePhoto // если фото нет, ставим заглушку
-          }));
-          console.log("Friends data mapped:", friendsData);  // Логируем преобразованные данные
-          setFriends(friendsData);
+          const data = JSON.parse(text);
+          console.log("Successfully fetched friends:", data);
+  
+          // Загружаем аватарки по username
+          const friendsDataWithAvatars = await Promise.all(
+            data.map(async (friend) => {
+              let avatarBase64 = userNoProfilePhoto;
+  
+              try {
+                if (friend.username) {
+                  const imgRes = await fetch(`http://192.168.2.100:8080/profile/get-avatar/${friend.username}`);
+                  if (imgRes.ok) {
+                    const blob = await imgRes.blob();
+                    const base64 = await new Promise((resolve, reject) => {
+                      const reader = new FileReader();
+                      reader.onloadend = () => resolve(reader.result);
+                      reader.onerror = reject;
+                      reader.readAsDataURL(blob);
+                    });
+                    avatarBase64 = base64;
+                  } else {
+                    console.warn(`No avatar found for ${friend.username}`);
+                  }
+                }
+              } catch (err) {
+                console.error(`Error loading avatar for ${friend.username}:`, err);
+              }
+  
+              return {
+                ...friend,
+                avatar: avatarBase64,
+              };
+            })
+          );
+  
+          console.log("Friends data with avatars:", friendsDataWithAvatars);
+          setFriends(friendsDataWithAvatars);
         } catch (error) {
           console.error('Error parsing JSON:', error);
           addTemporaryNotification(translate('friends_list_notification_error'), 'error');
           setFriends([]);
         }
       } catch (error) {
-        console.error('An error occurred during friends list loading. More:', error);  // Логируем ошибку
+        console.error('An error occurred during friends list loading. More:', error);
         addTemporaryNotification(translate('friends_list_notification_error'), 'error');
-        setFriends([]); // В случае ошибки очищаем список
+        setFriends([]);
       }
     };
-
-    fetchFriends(); // Вызовем загрузку данных при монтировании компонента
+  
+    fetchFriends();
   }, []);
 
   const handleFriendClick = (friend) => {

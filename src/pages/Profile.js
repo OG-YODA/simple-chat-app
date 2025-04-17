@@ -19,62 +19,56 @@ function Profile() {
     });
     const [showPhotoModal, setShowPhotoModal] = useState(false);
     const [showCropper, setShowCropper] = useState(false);
+    const [isLoading, setIsLoading] = useState(false); // прелоадер
     const [uploadedImage, setUploadedImage] = useState(null);
     const [originalFile, setOriginalFile] = useState(null);
 
-    const { addNotification } = useNotification();
+    const { addTemporaryNotification } = useNotification();
     const { translate } = useTranslation();
 
     const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
 
     useEffect(() => {
         const fetchData = async () => {
+            setIsLoading(true);
             try {
-                const response = await fetch(`http://192.168.2.100:8080/profile/refreshProfileData/${userId}`);
+                const response = await fetch(`http://192.168.2.100:8080/profile/refresh-profile-data`, {
+                    method: 'GET',
+                    headers: {
+                        'X-USER-ID': userId,
+                        'X-SECURITY-KEY': localStorage.getItem('accessKey'),
+                    },
+                });
+    
                 if (response.ok) {
                     const data = await response.json();
-                    const serverPhotoName = data.photoName;
-
-                    const localAvatarName = localStorage.getItem("userAvatarName");
-                    const localAvatar = localStorage.getItem("userAvatar");
-
-                    let photoToUse = defaultProfilePhoto;
-
-                    if (localAvatarName === serverPhotoName) {
-                        photoToUse = localAvatar;
-                    } else if (serverPhotoName) {
-                        const imgRes = await fetch(`http://192.168.2.100:8080/users/getAvatar/${userId}`);
-                        const blob = await imgRes.blob();
-                        const reader = new FileReader();
-                        reader.onloadend = () => {
-                            const base64 = reader.result;
-                            localStorage.setItem("userAvatar", base64);
-                            localStorage.setItem("userAvatarName", serverPhotoName);
-                            setProfileData({
-                                fullName: data.fullName || 'none',
-                                username: data.username || 'none',
-                                photo: base64,
-                                description: data.description || 'none'
-                            });
-                        };
-                        reader.readAsDataURL(blob);
-                        return;
-                    }
-
-                    setProfileData({
-                        fullName: data.fullName || 'none',
-                        username: data.username || 'none',
-                        photo: photoToUse,
-                        description: data.description || 'none'
-                    });
+                    const username = localStorage.getItem('username');
+    
+                    const imgRes = await fetch(`http://192.168.2.100:8080/profile/get-avatar/${username}`);
+                    const blob = await imgRes.blob();
+                    const reader = new FileReader();
+                    reader.onloadend = () => {
+                        const base64 = reader.result;
+    
+                        setProfileData({
+                            fullName: data.fullName || 'none',
+                            username: data.username || 'none',
+                            photo: base64,
+                            description: data.description || ''
+                        });
+                        setIsLoading(false);
+                    };
+                    reader.readAsDataURL(blob);
                 } else {
-                    addNotification(translate('profile_error'), 'error');
+                    addTemporaryNotification(translate('profile_error'), 'error');
+                    setIsLoading(false);
                 }
             } catch (error) {
-                addNotification(translate('profile_error'), 'error');
+                addTemporaryNotification(translate('profile_error'), 'error');
+                setIsLoading(false);
             }
         };
-
+    
         if (isAuthenticated && userId) {
             fetchData();
         }
@@ -85,7 +79,7 @@ function Profile() {
         if (!file) return;
 
         if (!allowedTypes.includes(file.type)) {
-            addNotification(translate('unsupported_file_format'), 'error');
+            addTemporaryNotification(translate('unsupported_file_format'), 'error');
             return;
         }
 
@@ -95,14 +89,14 @@ function Profile() {
         setShowCropper(true);
     };
 
-    const handleCropSave = (croppedBlob) => {
+    const handleCropSave = ({ blob, fileUrl }) => {
         if (!originalFile) return;
 
         const extension = originalFile.name.split('.').pop().toLowerCase();
         const timestamp = Date.now();
         const newFilename = `${timestamp}.${extension}`;
 
-        const renamedFile = new File([croppedBlob], newFilename, { type: croppedBlob.type });
+        const renamedFile = new File([blob], newFilename, { type: blob.type });
 
         const formData = new FormData();
         formData.append('avatar', renamedFile);
@@ -111,30 +105,51 @@ function Profile() {
 
         fetch('http://192.168.2.100:8080/profile/update-avatar', {
             method: 'POST',
+            headers: {
+                'X-USER-ID': userId,
+                'X-SECURITY-KEY': localStorage.getItem('accessKey'),
+            },
             body: formData
         })
             .then(res => res.ok ? res.json() : Promise.reject())
             .then(data => {
-                // Преобразуем отправленный файл в base64 и сохраняем
                 const reader = new FileReader();
                 reader.onloadend = () => {
                     const base64 = reader.result;
                     localStorage.setItem("userAvatar", base64);
                     localStorage.setItem("userAvatarName", newFilename);
                     setProfileData(prev => ({ ...prev, photo: base64 }));
-                    addNotification(translate('photo_update_success'), 'success');
+                    addTemporaryNotification(translate('photo_update_success'), 'success');
                     setShowCropper(false);
                     setShowPhotoModal(false);
                 };
                 reader.readAsDataURL(renamedFile);
             })
             .catch(() => {
-                addNotification(translate('photo_update_failed'), 'error');
+                addTemporaryNotification(translate('photo_update_failed'), 'error');
             });
     };
 
     const handleCropCancel = () => {
         setShowCropper(false);
+    };
+
+    const handleRefreshAvatar = async () => {
+        try {
+            const username = localStorage.getItem('username');
+            const imgRes = await fetch(`http://192.168.2.100:8080/profile/get-avatar/${username}`);
+            const blob = await imgRes.blob();
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                const base64 = reader.result;
+                localStorage.setItem("userAvatar", base64);
+                setProfileData(prev => ({ ...prev, photo: base64 }));
+                addTemporaryNotification(translate('photo_update_success'), 'success');
+            };
+            reader.readAsDataURL(blob);
+        } catch (error) {
+            addTemporaryNotification(translate('photo_update_failed'), 'error');
+        }
     };
 
     return (
@@ -143,15 +158,30 @@ function Profile() {
                 <>
                     <h1>{translate('profile')}</h1>
                     <div className="profile-container">
-                        <div className="profile-photo">
-                            <img src={profileData.photo} alt="Profile" className="profile-photo-img" />
+                        <div className="profile-photo"
+                            onClick={() => setShowPhotoModal(true)}
+                            title={translate('click_to_change')}
+                        >
+                            {isLoading ? (
+                                <div className="avatar-loader"></div>
+                            ) : (
+                                <div className="avatar-wrapper">
+                                    <img
+                                        src={profileData.photo}
+                                        alt="Profile"
+                                        className="profile-photo-img clickable-avatar"
+                                    />
+                                    <div className="avatar-overlay">{translate('change_photo')}</div>
+                                </div>
+                            )}
                         </div>
-                        <button className="add-photo-button" onClick={() => setShowPhotoModal(true)}>
-                            {translate('add_photo')}
-                        </button>
                         <ul className="profile-details">
                             <li id="fullname">{profileData.fullName}</li>
                             <li id="username">@ {profileData.username}</li>
+                            <li id="description">{profileData.description}</li>
+                            <li>
+                                <button className="edit-profile-button">{translate('edit_profile')}</button>
+                            </li>
                         </ul>
                     </div>
                     <button onClick={logout} className="logout-button">

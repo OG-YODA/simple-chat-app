@@ -63,6 +63,13 @@ const translations = {
       "friend-request": "Користувач {firstName} {lastName} надіслав вам запит в друзі!",
       "accept": "Прийняти",
       "decline": "Відхилити",
+      "unsupported_file_format": "Непідтримуваний формат файлу!",
+      "photo_update_success": "Аватар успішно оновлено!",
+      "photo_update_failed": "Не вдалося оновити аватар!",
+      "click_to_change": "Натисніть, щоб змінити",
+      "edit_profile": "Редагувати профіль",
+      "choose_photo_source": "Виберіть джерело фото",
+      "change_photo": "Змінити фото",
     },
     "en":{
       "main" : "Main",
@@ -126,6 +133,13 @@ const translations = {
       "friend-request": "Користувач {firstName} {lastName} надіслав вам запит в друзі!",
       "accept": "Прийняти",
       "decline": "Відхилити",
+      "unsupported_file_format": "Непідтримуваний формат файлу!",
+      "photo_update_success": "Аватар успішно оновлено!",
+      "photo_update_failed": "Не вдалося оновити аватар!",
+      "click_to_change": "Натисніть, щоб змінити",
+      "edit_profile": "Редагувати профіль",
+      "choose_photo_source": "Виберіть джерело фото",
+      "change_photo": "Змінити фото",
     }
 };
 

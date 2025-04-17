@@ -60,6 +60,7 @@ function Login() {
             if (response.ok) {
                 const data = await response.json();
                 const userId = data.userId; 
+                const username = data.username;
                 const accessKey = data.accessKey; 
 
                 async function sendIpOnLogin(userId) {
@@ -84,7 +85,7 @@ function Login() {
 
                 addNotification(translate('login_notification_success'), 'success');
 
-                login(accessKey, userId);
+                login(accessKey, userId, username);
 
                 setTimeout(() => {
                     navigate('/home');

@@ -16,6 +16,7 @@ import ThemeToggle from './components/ThemeToggle';
 import LanguageToggle from './components/LanguageToggle';
 import AuthContext from './context/AuthContext';
 import ThemeContext from './context/ThemeContext';
+
 import './styles/global.css';
 
 function App() {

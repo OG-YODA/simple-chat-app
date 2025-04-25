@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { useNotification } from '../components/NotificationProvider';
+import { useNotification } from '../context/NotificationProvider';
 import { useTranslation } from '../context/TranslationContext';
 import AuthContext from '../context/AuthContext';
 import ImageCropper from '../components/ImageCropper';

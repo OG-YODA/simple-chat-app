@@ -1,7 +1,7 @@
 import React, { useState, useContext } from 'react'; 
 import '../styles/login.css';
 import { useNavigate } from 'react-router-dom'; 
-import { useNotification } from '../components/NotificationProvider';
+import { useNotification } from '../context/NotificationProvider';
 import AuthContext from '../context/AuthContext'; 
 import { useTranslation } from '../context/TranslationContext';
 

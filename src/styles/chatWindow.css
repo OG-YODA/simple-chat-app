@@ -1,0 +1,181 @@
+/* Chat window styles */
+.chat-window {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100%;
+  position: relative;
+}
+
+.App.dark .chat-window {
+  color: #eee;
+}
+
+/* Header with back button */
+.chat-header {
+  height: 60px; /* Фіксована висота */
+  padding: 0 1rem;
+  background: white;
+  border-bottom: 1px solid #eee;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  flex-shrink: 0;
+}
+
+.App.dark .chat-header {
+  background: #444; /* Темна тема */
+  color: #eee;
+  border-bottom: 1px solid #555; /* Темна тема */
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.back-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.2rem;
+  padding: 0.5rem;
+  display: flex;
+  align-items: center;
+}
+
+.App.dark .back-button {
+  color: #eee;
+}
+
+.App.dark .message{
+  background: #555; /* Темна тема */
+  color: #eee;
+}
+
+.App.dark .message-content{
+  font-size: 16px;
+}
+
+/* Messages area */
+.messages-container {
+  flex: 1 1 auto;
+  overflow-y: scroll; /* Змінимо на scroll для гарантованого відображення */
+  padding: 20px;
+  min-height: 40%; /* Мінімальна висота */
+  transition: min-height 0.3s ease;
+  scrollbar-width: none; /* Для Firefox */
+  -ms-overflow-style: none; /* Для IE/Edge */
+}
+
+/* Приховуємо скроллбар у WebKit (Chrome, Safari) */
+.messages-container::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  background: transparent;
+}
+
+/* Input area container */
+.message-input-container {
+  display: flex;
+  align-items: flex-end;
+  padding: 10px;
+  background-color: white;
+  border-top: 1px solid #ddd;
+  box-shadow: 0 -2px 5px rgba(0,0,0,0.1);
+  z-index: 5;
+  max-height: 120vh; /* Максимальна висота (4 рядки) */
+  transition: max-height 0.3s ease;
+}
+
+.App.dark .message-input-container {
+  background: #444; /* Темна тема */
+  color: #eee;
+  border-top: 1px solid #555; /* Темна тема */
+}
+
+/* Textarea wrapper for proper sizing */
+.textarea-wrapper {
+  flex-grow: 1;
+  display: flex;
+  align-items: center;
+  max-height: 120vh;
+  overflow: hidden;
+}
+
+/* Textarea styles */
+textarea {
+  width: 100%;
+  min-height: 40px;
+  resize: none;
+  padding: 1%;
+  font-size: 14px;
+  border: 1px solid #ccc;
+  border-radius: 20px;
+  outline: none;
+  margin-right: 10px;
+  line-height: 1.5;
+  max-height: 160vh; /* Максимум 4 рядки (лімітуємо зростання) */
+  overflow-y: scroll; /* Змінимо на scroll */
+  scrollbar-width: none; /* Для Firefox */
+  -ms-overflow-style: none; /* Для IE/Edge */
+  transition: all 0.3s ease;
+}
+
+.App.dark textarea {
+  background: #555; /* Темна тема */
+  color: #eee;
+  border: 1px solid #666; /* Темна тема */
+}
+
+textarea::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  background: transparent;
+}
+
+textarea:focus {
+  border-color: #4d90fe;
+}
+
+/* Send button styles */
+.send-button {
+  padding: 10px 20px;
+  font-size: 14px;
+  background-color: #4d90fe;
+  color: white;
+  border: none;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  height: 40px;
+  flex-shrink: 0;
+  margin-bottom: 5px;
+}
+
+/* Dynamic resizing behavior */
+textarea:focus {
+  min-height: 40px;
+}
+
+/* Adjust messages container when input grows */
+.chat-window:has(textarea:focus) .messages-container {
+  min-height: 40%;
+}
+
+/* Mobile adaptations */
+@media (max-width: 768px) {
+  .message-input-container {
+    width: 100%;
+    right: 0;
+    left: 0;
+  }
+  
+  .messages-container {
+    padding-bottom: 15px;
+  }
+  
+  textarea {
+    max-height: 25vh;
+  }
+
+}

@@ -1,6 +1,6 @@
 import React, { useState, useContext } from "react";
 import AuthContext from "../context/AuthContext";
-import { useNotification } from "../components/NotificationProvider";
+import { useNotification } from "../context/NotificationProvider";
 import { useTranslation } from "../context/TranslationContext";
 
 import "../styles/addContact.css";

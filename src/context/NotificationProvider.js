@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
-import CustomNotification from "./CustomNotification";
-import AuthContext from "../context/AuthContext";
+import CustomNotification from "../components/CustomNotification";
+import AuthContext from "./AuthContext";
 import SockJS from "sockjs-client";
 import { CompatClient, Stomp } from "@stomp/stompjs";
 

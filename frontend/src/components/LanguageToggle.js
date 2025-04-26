@@ -27,6 +27,10 @@ function LanguageToggle() {
       <ul className="language-options">
         <li onClick={() => setLanguage('en')}>English</li>
         <li onClick={() => setLanguage('ua')}>Українська</li>
+        <li onClick={() => setLanguage('pl')}>Polski</li>
+        <li onClick={() => setLanguage('fr')}>Français</li>
+        <li onClick={() => setLanguage('de')}>Deutsch</li>
+        <li onClick={() => setLanguage('es')}>Español</li>
       </ul>
     </div>
   );
